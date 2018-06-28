@@ -1,0 +1,233 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#storeModal">
+    Add Store
+</button><br /><br />
+
+<table class="table table-light table-hover" id="storestable">
+    <thead>
+        <tr>
+            <th>Store Name</th>
+            <th>Address</th>
+            <th>Action(Edit)</th>
+            <th>Action(Delete</th>
+        </tr>
+    </thead>
+    <tbody></tbody>
+</table>
+
+@*Add Store modal*@
+<div class="modal fade" id="storeModal" tabindex="-1" role="dialog" aria-labelledby="storeModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="storeModalLabel">Add New Store</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="storeForm">
+                    <div class="form-group">
+                        <label for="storeName">Name</label>
+                        <input type="text" class="form-control" id="storeName" placeholder="Please Enter Store Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="storeAddress">Address</label>
+                        <input type="text" class="form-control" id="storeAddress" placeholder="Please Enter Store Address">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="storeSubmit">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*Edit Store Modal*@
+<div class="modal fade" id="editStoreModal" tabindex="-1" role="dialog" aria-labelledby="editStoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editStoreModalLabel">Edit Store</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h4>Store Details</h4>
+                <form id="editStoreForm">
+                    <div class="form-group">
+                        <label for="StoreName">Name</label>
+                        <input type="text" class="form-control" id="StoreName">
+                    </div>
+                    <div class="form-group">
+                        <label for="StoreAddress">Address</label>
+                        <input type="text" class="form-control" id="StoreAddress">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="editStoreSubmit">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*Delete Store Modal*@
+<div class="modal fade" id="deleteStoreModal" tabindex="-1" role="dialog" aria-labelledby="deleteStoreModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="DeleteStoreModalLabel">Delete Store</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Do you want to delete this Store?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-danger" id="deleteStoreSubmit">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        //Add dataTable
+        $(document).ready(function () {
+            $("#storestable").DataTable({
+                ajax: {
+                    url: "api/Stores",
+                    dataSrc: ""
+                },
+                columns: [
+                    {
+                        data: "name"
+                    },
+                    {
+                        data: "address"
+                    },
+                    {
+                        data: "id",
+                        render: function (data) {
+                            return "<button class = 'btn btn-warning' id='editStoreBtn' edit-Store-id=" +
+                                data +
+                                ">Edit</button>";
+                        }
+                    },
+                    {
+                        data: "id",
+                        render: function (data) {
+                            return "<button class = 'btn btn-danger' id='deleteStoreBtn' delete-Store-id=" +
+                                data +
+                                ">Delete</button>";
+                        }
+                    }
+                ]
+            });
+
+            //Add new Store
+            $("#storeSubmit").click(function () {
+
+                var formdata = {
+                    "name": $("#storeName").val(),
+                    "address": $("#storeAddress").val()
+                };
+
+                $.ajax({
+                    url: "api/stores",
+                    method: "POST",
+                    data: JSON.stringify(formdata),
+                    contentType: "application/json;charset=utf-8",
+                    processData: true,
+                    success: function () {
+                        $("#storeModal").modal("hide");
+                        location.reload(true);
+                    },
+                    error: function (xhr) {
+                        alert(xhr.responseText);
+                    }
+                });
+            });
+
+            //Delete Store
+            $("#stores").on("click",
+                "#deleteStoreBtn",
+                function () {
+
+                    var StoreId = $(this).attr("delete-Store-id");
+
+                    $("#deleteStoreModal").modal("show");
+
+                    $("#deleteStoreSubmit").click(function () {
+
+                        $.ajax({
+                            url: "/api/stores/" + StoreId,
+                            method: "DELETE",
+                            success: function () {
+                                $("#deleteStoreModal").modal("hide");
+                                location.reload(true);
+                            }
+                        });
+                    });
+                });
+
+            //Edit Store
+            $("#stores").on("click",
+                "#editStoreBtn",
+                function () {
+                    var StoreId = $(this).attr("edit-Store-id");
+
+                    $("#editStoreModal").modal("show");
+
+                    $.ajax({
+                        url: "api/stores/" + StoreId,
+                        method: "GET",
+                        success: function (data) {
+
+                            var storeData = JSON.parse(JSON.stringify(data));
+                            $("#StoreName").attr("placeholder", storeData.name);
+                            $("#StoreAddress").attr("placeholder", storeData.address);
+
+                            $("#editStoreSubmit").click(function () {
+                                var formdata = {
+                                    "name": $("#StoreName").val(),
+                                    "address": $("#StoreAddress").val()
+                                };
+                                $.ajax({
+                                    url: "/api/stores/" + StoreId,
+                                    method: "PUT",
+                                    data: JSON.stringify(formdata),
+                                    contentType: "application/json;charset=utf-8",
+                                    processData: true,
+                                    success: function () {
+                                        $("#editStoreModal").modal("hide");
+                                        location.reload(true);
+                                    },
+                                    error: function (xhr) {
+                                        alert(xhr.responseText);
+                                    }
+                                });
+                            });
+                        },
+                        error: function (xhr) {
+                            alert(xhr.responseText);
+                        }
+                    });
+                });
+        });
+    </script>
+}

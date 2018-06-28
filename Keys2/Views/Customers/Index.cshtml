@@ -1,0 +1,233 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2>Index</h2>
+
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#CustomerModal"
+        onclick="clearTextBox();">
+    Add Customer
+</button><br /><br />
+
+<table class="table table-light table-hover" id="CustomersTable">
+    <tr>
+        <th>Customer Name</th>
+        <th>Address</th>
+        <th>Action(Edit)</th>
+        <th>Action(Delete</th>
+    </tr>
+</table>
+
+
+@*Add customer modal*@
+<div class="modal fade" id="CustomerModal" tabindex="-1" role="dialog" aria-labelledby="CustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="CustomerModalLabel">Add New Customer</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="CustomerForm">
+                    <div class="form-group">
+                        <label for="customerName">Name</label>
+                        <input type="text" class="form-control" id="CustomerName" placeholder="Please Enter Your Name">
+                    </div>
+                    <div class="form-group">
+                        <label for="customerAddress">Address</label>
+                        <input type="text" class="form-control" id="CustomerAddress" placeholder="Please Enter Your Address">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="CustomerSubmit">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@*Edit Customer Modal*@
+<div class="modal fade" id="editCustomerModal" tabindex="-1" role="dialog" aria-labelledby="editCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editCustomerModalLabel">Edit Customer</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <h4>Customer Details</h4>
+                <form id="editCustomerForm">
+                    <div class="form-group">
+                        <label for="customerName">Name</label>
+                        <input type="text" class="form-control" id="customerName">
+                    </div>
+                    <div class="form-group">
+                        <label for="customerAddress">Address</label>
+                        <input type="text" class="form-control" id="customerAddress">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="editCustomerSubmit">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*Delete Customer Modal*@
+<div class="modal fade" id="deleteCustomerModal" tabindex="-1" role="dialog" aria-labelledby="deleteCustomerModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="DeleteCustomerModalLabel">Delete Customer</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                Do you want to delete this customer?
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-success" data-dismiss="modal">No</button>
+                <button type="button" class="btn btn-danger" id="deleteCustomerSubmit">Yes</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts
+{
+    <script>
+        //Add dataTable
+        $(document).ready(function() {
+            $("#CustomersTable").DataTable({
+                ajax: {
+                    url: "api/customers",
+                    dataSrc: ""
+                },
+                columns: [
+                    {
+                        data: "name"
+                    },
+                    {
+                        data: "address"
+                    },
+                    {
+                        data: "id",
+                        render: function(data) {
+                            return "<button class = 'btn btn-warning' id='editCustomerBtn' edit-customer-id=" +
+                                data +
+                                ">Edit</button>";
+                        }
+                    },
+                    {
+                        data: "id",
+                        render: function(data) {
+                            return "<button class = 'btn btn-danger' id='deleteCustomerBtn' delete-customer-id=" +
+                                data +
+                                ">Delete</button>";
+                        }
+                    }
+                ]
+            });
+
+            //Add new customer
+            $("#CustomerSubmit").click(function() {
+
+                var formdata = {
+                    "name": $("#CustomerName").val(),
+                    "address": $("#CustomerAddress").val()
+                };
+
+                $.ajax({
+                    url: "api/customers",
+                    method: "POST",
+                    data: JSON.stringify(formdata),
+                    contentType: "application/json;charset=utf-8",
+                    processData: true,
+                    success: function() {
+                        $("#CustomerModal").modal("hide");
+                        location.reload(true);
+                    },
+                    error: function(xhr) {
+                        alert(xhr.responseText);
+                    }
+                });
+            });
+
+            //Delete customer
+            $("#customers").on("click",
+                "#deleteCustomerBtn",
+                function() {
+
+                    var customerId = $(this).attr("delete-customer-id");
+
+                    $("#deleteCustomerModal").modal("show");
+
+                    $("#deleteCustomerSubmit").click(function() {
+
+                        $.ajax({
+                            url: "/api/customers/" + customerId,
+                            method: "DELETE",
+                            success: function() {
+                                $("#deleteCustomerModal").modal("hide");
+                                location.reload(true);
+                            }
+                        });
+                    });
+                });
+
+            //Edit customer
+            $("#customers").on("click",
+                "#editCustomerBtn",
+                function() {
+                    var customerId = $(this).attr("edit-customer-id");
+
+                    $("#editCustomerModal").modal("show");
+
+                    $.ajax({
+                        url: "api/customers/" + customerId,
+                        method: "GET",
+                        success: function(data) {
+
+                            var customerData = JSON.parse(JSON.stringify(data));
+                            $("#customerName").attr("placeholder", customerData.name);
+                            $("#customerAddress").attr("placeholder", customerData.address);
+
+                            $("#editCustomerSubmit").click(function() {
+                                var formdata = {
+                                    "name": $("#customerName").val(),
+                                    "address": $("#customerAddress").val()
+                                };
+                                $.ajax({
+                                    url: "/api/customers/" + customerId,
+                                    method: "PUT",
+                                    data: JSON.stringify(formdata),
+                                    contentType: "application/json;charset=utf-8",
+                                    processData: true,
+                                    success: function() {
+                                        $("#editCustomerModal").modal("hide");
+                                        location.reload(true);
+                                    },
+                                    error: function(xhr) {
+                                        alert(xhr.responseText);
+                                    }
+                                });
+                            });
+                        },
+                        error: function(xhr) {
+                            alert(xhr.responseText);
+                        }
+                    });
+                });
+        });
+    </script>
+}

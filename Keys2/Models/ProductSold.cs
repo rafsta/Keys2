@@ -11,15 +11,27 @@ namespace Keys2.Models
 {
     using System;
     using System.Collections.Generic;
-    
+    using System.ComponentModel;
+    using System.ComponentModel.DataAnnotations;
+
     public partial class ProductSold
     {
         public int Id { get; set; }
+        [Required]
+        [DisplayName(displayName: "Customer Name")]
         public int CustomerId { get; set; }
+        [Required]
+        [DisplayName(displayName: "Product Name")]
         public int ProductId { get; set; }
+        [Required]
+        [DisplayName(displayName: "Store Name")]
         public int StoreId { get; set; }
+        [Required]
+        [DisplayName(displayName: "Date Sold")]
+        [DataType(DataType.Date)]
+        [DisplayFormat(ApplyFormatInEditMode = true, DataFormatString = "{0:MM/dd/yyyy}")]
         public string DateSold { get; set; }
-    
+
         public virtual Customer Customer { get; set; }
         public virtual Product Product { get; set; }
         public virtual Store Store { get; set; }
